@@ -3,81 +3,135 @@
 #include <string.h>
 #include <time.h>
 
-struct class {char name[20]; int students; int id; struct class *next_class;};
-struct class * make_class(char class_name[20], int class_size, int class_id);
-void print_class(struct class *s);
-
-void print_list(struct class *s);
-struct class * insert_front(struct class *s, char name[20], int students, int id);
-struct class * free_list(struct class *s);
+#include "main.h"
 
 
 int main() {
-    struct class *systems;
-    systems = make_class("Systems", 30, 5);
+    newlines(1);
 
-    printf("Classes in backwards order:\n");
+    struct course *systems;
+    systems = make_course("Systems", 30, 5);
 
-    print_class(systems);
+    printf("courses in backwards order:\n");
+
+    print_course(systems);
 
     int i;
     srand(time(NULL));
 
-    struct class *first = systems;
+    struct course *first = systems;
 
-    // Creating 7 classes
     for (i = 1; i < 8; i++){
 
         char name[4] = {(char)(65 + rand() % 26), (char)(65 + rand() % 26), (char)(65 + rand() % 26), '\0'};
 
         first = insert_front(first, name, rand() % 50, rand() % 1000);
  
-        print_class(first);
+        print_course(first);
     }
 
-    printf("\n\nThe schedule is as follows:\n");
+    newlines(2);
+
+    printf("The schedule is as follows:\n");
+
+    print_list(first);
+
+    int course_TBR = first -> next_course -> next_course -> next_course -> id;
+
+    // ======================
+    printf("Removing the course with ID %d\n", course_TBR);
+
+    struct course * holder1 = remove_course(first, course_TBR);
+
+    printf("New schedule:\n");
+
+    print_list(first);
+    // ======================
+    printf("Removing the Systems course \n");
+
+    struct course * holder2 = remove_course(first, 5);
+
+    printf("New schedule:\n");
+
+    print_list(first);
+    // ======================
+    printf("Removing the course with ID %d: (which is impossible because all the IDs are taken mod 1000\n", 1001);
+
+    struct course * holder3 = remove_course(first, 1001);
+
+    printf("New schedule:\n");
 
     print_list(first);
 
     free_list(first);
-
+    //=================================
     return 0;
 }
 
-struct class *make_class(char class_name[20], int class_size, int class_id){
-    struct class *n = malloc(sizeof(struct class));
-    strncpy(n->name, class_name, sizeof(n->name));
-    n->students = class_size;
-    n->id = class_id;
-    n->next_class = 0;
-    return n;
-}
-
-
-void print_class(struct class *s){
-    printf("The %s class (ID: %d) has %d students.\n", s->name, s->id,  s->students);
-}
-
-void print_list(struct class *s){
-    while (s != 0){
-        print_class(s);
-        s = s->next_class;
+void newlines(int n){
+    int i;
+    for (i = 0; i < n; i++){
+        printf("\n");
     }
 }
 
-
-struct class * insert_front(struct class *s, char name[20], int students, int id){
-    struct class *n = make_class(name, students, id);
-    n->next_class = s;
+struct course *make_course(char course_name[20], int course_size, int course_id){
+    struct course *n = malloc(sizeof(struct course));
+    strncpy(n->name, course_name, sizeof(n->name));
+    n->students = course_size;
+    n->id = course_id;
+    n->next_course = 0;
     return n;
 }
 
 
-struct class * free_list(struct class *s){
-    struct class *tmp = s;
+void print_course(struct course *s){
+    printf("The %s course (ID: %d) has %d students.\n", s->name, s->id,  s->students);
+}
+
+void print_list(struct course *s){
+    while (s != 0){
+        print_course(s);
+        s = s->next_course;
+    }
+    newlines(2);
+}
+
+
+struct course * insert_front(struct course *s, char name[20], int students, int id){
+    struct course *n = make_course(name, students, id);
+    n->next_course = s;
+    return n;
+}
+
+
+struct course * free_list(struct course *s){
+    struct course *tmp = s;
     while (s != 0){
         free(s);
-        s = s->next_class;
+        s = s->next_course;
     }
     return tmp;
+}
+
+struct course * remove_course(struct course *front, int course_code){
+    struct course *temp = front, *prev;
+ 
+    if (temp != NULL && temp->id == course_code) {
+        front = temp->next_course;
+        free(temp);
+        return front;
+    }
+
+    while (temp != NULL && temp->id != course_code) {
+        prev = temp;
+        temp = temp->next_course;
+    }
+ 
+    if (temp != NULL){
+        prev->next_course = temp->next_course;
+        free(temp);
+    }
+
+    return front;
 }
